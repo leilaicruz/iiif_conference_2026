@@ -23,6 +23,7 @@ curl -X GET "https://data.4tu.nl/iiif/v3/uuid_2/1/manifest" | jq  > manifest_uui
 ./inject_metadata.sh <dataset_uuid> <manifest_in.json> <manifest_out.json>
 
 ```
+Example of an enriched manifest: https://leilaicruz.github.io/iiif_conference_2026/iiif/manifest_1_enriched2.json
 
 - To add annotations using  csv file with the following format:
 
