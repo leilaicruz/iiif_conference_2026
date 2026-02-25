@@ -24,7 +24,15 @@ curl -X GET "https://data.4tu.nl/iiif/v3/uuid_2/1/manifest" | jq  > manifest_uui
 
 ```
 
+- To add annotations using  csv file with the following format:
 
+```
+canvas_label,text,xywh,motivation,lang
+```
+ to the manifest, you can use the following command:
 
+ ```
+./annotations/inject_inline_annotations.py <manifest_in.json> <annotations.csv> <manifest_out.json>
 
-- Make a shareable exhibition with the aggregated manifest that can be used for comparison or reuse.
+ ```
+
