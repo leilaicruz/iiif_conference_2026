@@ -1,0 +1,7 @@
+canvas_label,text,xywh,motivation,lang
+CA216132V0066.tif,"Rock outcrop visible in lower right quadrant","1200,1300,300,250",commenting,en
+CA216132V0066.tif,"Cloud cover partially obscures coastline","200,150,500,300",commenting,en
+CA216433R0206.tif,"Snow accumulation zone clearly segmented","800,900,400,350",describing,en
+CA216431L0224.tif,"Possible shadow artifact along ridge","300,1100,450,200",commenting,en
+CA216332V0164.tif,"Water body boundary misclassified in segmentation","600,700,500,400",tagging,en
+CA216431L0201.tif,"Ice-snow transition visible in central area","950,950,350,350",commenting,en
