@@ -1,6 +1,6 @@
 {
   "@context": "http://iiif.io/api/presentation/3/context.json",
-  "id": "https://data.4tu.nl/iiif/v3/052fa1dc-cf10-4bef-8b64-aeda99fbe3a4/1/manifest",
+  "id": "https://leilaicruz.github.io/iiif_conference_2026/iiif/manifest_2_enriched2.json",
   "type": "Manifest",
   "label": {
     "en": [
