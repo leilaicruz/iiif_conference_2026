@@ -1,0 +1,15 @@
+# HTTP requests to IIIF APIs
+requests>=2.31.0
+
+# Numerical analysis
+numpy>=1.24.0
+
+# Image handling
+Pillow>=10.0.0
+
+# Plotting in notebooks
+matplotlib>=3.7.0
+
+# Jupyter notebook environment
+notebook>=7.0.0
+ipykernel>=6.25.0
