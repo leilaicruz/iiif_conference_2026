@@ -137,6 +137,7 @@ Then the agregated metadata can be injected into the manifest of each dataset :
 ./inject_metadata.sh <dataset_uuid> manifest_<dataset_uuid>.json manifest_enriched_<dataset_uuid>.json
 
 ```
+Example of an enriched manifest: https://leilaicruz.github.io/iiif_conference_2026/iiif/manifest_1_enriched2.json
 
 ## Step 6 - Injecting structured annotations from CSV
 
