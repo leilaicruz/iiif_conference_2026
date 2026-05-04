@@ -5,6 +5,7 @@ from typing import Any
 
 import pandas as pd
 import streamlit as st
+import requests
 
 from urllib.parse import urlparse
 import os
@@ -64,6 +65,48 @@ def show_manifest_summary(manifest: dict[str, Any]) -> None:
 def read_uploaded_manifest(uploaded_file) -> dict[str, Any]:
     return json.loads(uploaded_file.getvalue().decode("utf-8"))
 
+
+def extract_file_uuid_from_thumbnail(item):
+    try:
+        thumbnail = item.get("thumbnail", [])
+        if not thumbnail:
+            return None
+
+        thumb_id = thumbnail[0].get("id", "")
+        parts = urlparse(thumb_id).path.strip("/").split("/")
+
+        # Expected path:
+        # iiif/v3/<fileuuid>/full/max/0/default.jpg
+        if "v3" in parts:
+            index = parts.index("v3")
+            return parts[index + 1]
+
+    except Exception:
+        return None
+
+    return None
+
+
+@st.cache_data(show_spinner=False)
+def fetch_file_metadata(dataset_uuid, file_uuid):
+    url = f"https://data.4tu.nl/v2/articles/{dataset_uuid}/files/{file_uuid}"
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_file_display_name(dataset_uuid, file_uuid):
+    try:
+        file_metadata = fetch_file_metadata(dataset_uuid, file_uuid)
+
+        return (
+            file_metadata.get("name")
+            
+        )
+
+    except Exception:
+        return file_uuid
+
 def extract_filename_from_url(url):
     try:
         path = urlparse(url).path
@@ -72,7 +115,7 @@ def extract_filename_from_url(url):
     except Exception:
         return "Unnamed image"
 
-def extract_thumbnail_urls(manifest, max_items=12, size=128):
+def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=128):
     if not isinstance(manifest, dict):
         return []
 
@@ -80,29 +123,20 @@ def extract_thumbnail_urls(manifest, max_items=12, size=128):
 
     for item in manifest.get("items", [])[:max_items]:
         try:
-            body = item["items"][0]["items"][0]["body"]
+            file_uuid = extract_file_uuid_from_thumbnail(item)
 
-            # Try to get service (IIIF)
-            service = body.get("service", [])
-            if isinstance(service, dict):
-                service_id = service.get("id") or service.get("@id")
-            elif isinstance(service, list) and service:
-                service_id = service[0].get("id") or service[0].get("@id")
+            if dataset_uuid and file_uuid:
+                label = get_file_display_name(dataset_uuid, file_uuid)
             else:
-                service_id = None
+                label = file_uuid or "Unnamed image"
 
-            body_id = body.get("id")
-
-            # Extract filename from body_id
-            filename = extract_filename_from_url(body_id) if body_id else "Unnamed image"
-
-            if service_id:
-                thumb_url = f"{service_id}/full/!{size},{size}/0/default.jpg"
-                urls.append((filename, thumb_url))
-                continue
-
-            if body_id:
-                urls.append((filename, body_id))
+            thumbnail = item.get("thumbnail", [])
+            if thumbnail:
+                thumb_id = thumbnail[0].get("id")
+                if thumb_id:
+                    thumb_url = thumb_id.replace("/full/max/", f"/full/!{size},{size}/")
+                    urls.append((label, thumb_url))
+                    continue
 
         except Exception:
             continue
@@ -199,7 +233,7 @@ if dataset:
 if isinstance(manifest, dict):
     st.header("Image thumbnails from the manifest")
 
-    thumbnail_urls = extract_thumbnail_urls(manifest, size=128)
+    thumbnail_urls = extract_thumbnail_urls(manifest, dataset_uuid=dataset_uuid, size=128)
 
     if not thumbnail_urls:
         st.warning("No image URLs could be extracted from this manifest.")
