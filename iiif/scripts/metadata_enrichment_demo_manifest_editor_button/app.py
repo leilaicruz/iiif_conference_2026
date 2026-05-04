@@ -28,7 +28,7 @@ from metadata_enrichment.iiif_image_analysis import (
     get_canvas_label,
 )
 
-st.set_page_config(page_title="IIIF Metadata Enrichment Demo", layout="wide")
+st.set_page_config(page_title="IIIF Metadata enrichment and On-the-Fly image analysis", layout="wide")
 
 FIELD_HELP = {
     "resource_title": "Adds the dataset resource_title as IIIF metadata.",
@@ -143,8 +143,14 @@ def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=64):
 
     return urls
 
+st.set_page_config(
+    page_title="IIIF features for 4TU.ResearchData: Metadata enrichment and on-the-fly image analysis",
+    page_icon="assets/Logo.png",
+    layout="wide"
+)
 
-st.title("IIIF Manifest Metadata Enrichment Demo")
+st.image("assets/Logo.png", width=120)
+
 st.caption("Fetch or upload a IIIF manifest, select 4TU metadata fields, enrich the manifest, run lightweight image analysis, and export the result.")
 
 with st.sidebar:
