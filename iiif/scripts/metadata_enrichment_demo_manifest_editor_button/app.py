@@ -144,20 +144,8 @@ def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=64):
 
     return urls
 
-st.set_page_config(
-    page_title="IIIF features for 4TU.ResearchData: Metadata enrichment and on-the-fly image analysis",
-    page_icon=str(Path(__file__).parent / "assets" / "Logo.png"),
-    layout="wide"
-)
 
-APP_DIR = Path(__file__).parent
-LOGO_PATH = APP_DIR / "assets" / "Logo.png"
-
-if LOGO_PATH.exists():
-    st.image(str(LOGO_PATH), width=120)
-else:
-    st.warning(f"Logo not found at: {LOGO_PATH}")
-
+st.title("IIIF features for 4TU.ResearchData: Metadata enrichment and on-the-fly image analysis")
 st.caption("Fetch or upload a IIIF manifest, select 4TU metadata fields, enrich the manifest, run lightweight image analysis, and export the result.")
 
 with st.sidebar:
