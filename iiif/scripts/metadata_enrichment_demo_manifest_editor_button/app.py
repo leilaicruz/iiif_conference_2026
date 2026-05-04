@@ -60,6 +60,32 @@ def show_manifest_summary(manifest: dict[str, Any]) -> None:
 def read_uploaded_manifest(uploaded_file) -> dict[str, Any]:
     return json.loads(uploaded_file.getvalue().decode("utf-8"))
 
+def extract_thumbnail_urls(manifest, max_items=12):
+    urls = []
+
+    for item in manifest.get("items", [])[:max_items]:
+        label = item.get("label", {}).get("en", ["Untitled canvas"])[0]
+
+        # Prefer IIIF Image API service
+        try:
+            service_id = (
+                item["items"][0]["items"][0]["body"]["service"][0]["id"]
+            )
+            thumb_url = f"{service_id}/full/!250,250/0/default.jpg"
+            urls.append((label, thumb_url))
+            continue
+        except Exception:
+            pass
+
+        # Fallback to body id
+        try:
+            body_id = item["items"][0]["items"][0]["body"]["id"]
+            urls.append((label, body_id))
+        except Exception:
+            pass
+
+    return urls
+
 
 st.title("IIIF Manifest Metadata Enrichment Demo")
 st.caption("Fetch or upload a IIIF manifest, select 4TU metadata fields, enrich the manifest, run lightweight image analysis, and export the result.")
@@ -147,8 +173,20 @@ if dataset:
         if "geolocation" in selected_fields:
             st.caption("Geolocation is added as IIIF navPlace, not as a regular metadata row.")
 
+st.subheader("Image thumbnails from the manifest")
 
-st.subheader("2. Analyze images in Python")
+thumbnail_urls = extract_thumbnail_urls(manifest)
+
+if not thumbnail_urls:
+    st.warning("No image URLs could be extracted from this manifest.")
+else:
+    cols = st.columns(3)
+
+    for index, (label, url) in enumerate(thumbnail_urls):
+        with cols[index % 3]:
+            st.image(url, caption=label, use_container_width=True)
+
+st.subheader("Analyze images in Python")
 
 st.markdown("""
 This demo shows how IIIF image derivatives can be requested directly from the manifest
@@ -167,9 +205,9 @@ The current analysis performs two simple operations:
    - It applies a Sobel edge filter to highlight sharp intensity changes.
    - This can reveal object boundaries, cell edges, texture, or other structural features.
 
-This is not intended as a full scientific image-analysis workflow yet.
+This is not intended as a full scientific image-analysis workflow.
 It is a small proof of concept showing that image-processing functionality can later be
-embedded into the repository or enrichment pipeline.
+embedded into the repository.
 """)
 
 if manifest:
@@ -241,25 +279,9 @@ if manifest:
 else:
     st.info("Load a manifest first to enable the image-analysis demo.")
 
-st.subheader("3. Enrich manifest")
+st.subheader("Enrich manifest")
 
-st.subheader("Preview in Digirati Manifest Editor")
-st.write(
-    "Open the editor from here at any point. "
-    "If your manifest is only local or uploaded in this dashboard, first download it and then upload/import it in the editor."
-)
-st.link_button(
-    "Open Digirati Manifest Editor",
-    "https://manifest-editor.digirati.services/?tab=recent",
-    type="primary"
-)
 
-if dataset_uuid:
-    source_manifest_url = f"https://data.4tu.nl/iiif/v3/{dataset_uuid}/1/manifest"
-    st.caption(
-        "Source manifest URL. This points to the original 4TU manifest, not the enriched local JSON:"
-    )
-    st.code(source_manifest_url, language="text")
 
 if run_button:
     if not manifest:
@@ -308,3 +330,21 @@ if run_button:
         
 else:
     st.info("Choose fields in the sidebar, then run enrichment.")
+
+st.subheader("Preview in Digirati Manifest Editor")
+st.write(
+    "Open the editor from here at any point. "
+    "If your manifest is only local or uploaded in this dashboard, first download it and then upload/import it in the editor."
+)
+st.link_button(
+    "Open Digirati Manifest Editor",
+    "https://manifest-editor.digirati.services/?tab=recent",
+    type="primary"
+)
+
+if dataset_uuid:
+    source_manifest_url = f"https://data.4tu.nl/iiif/v3/{dataset_uuid}/1/manifest"
+    st.caption(
+        "Source manifest URL. This points to the original 4TU manifest, not the enriched local JSON:"
+    )
+    st.code(source_manifest_url, language="text")
