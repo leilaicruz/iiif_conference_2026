@@ -7,6 +7,7 @@
 https://data.4tu.nl/authors/fea320e2-8b69-405d-9629-ee001f2d26b4
 https://data.4tu.nl/authors/609650c6-743c-4d13-9d3f-18b9c8525589
 
+- check https://systemik-solutions.github.io/Glycerine_Guide/intro.html ,  Image Annotation Workbench
 
 ## Use case : agregate manifests from multiple datasets of one collection or one author in order to create manifest of a collection of images that can be used for comparison or reuse.
 

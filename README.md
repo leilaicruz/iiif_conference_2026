@@ -15,175 +15,227 @@ IIIF in this context is:
 Since deposit happens after research completion, IIIF: cannot influence experimental design, cannot support iterative image acquisition decisions, cannot integrate with lab instrumentation workflows. Thus , **our use cases are not focused on real-time microscopy analysis, computational image segmentation pipelines, or AI model training during experimentation**. Instead, we focus on post-deposition use cases that leverage IIIF for enhanced access, comparison, and reuse of published scientific images.
 
 
-##  Case 1 : Aggregate metadata from scientific image datasets and expose it through IIIF Manifests for comparison and reuse
+Here is a clean, internally consistent rewrite of your use case under the **enrichment framing**, with terminology, architecture, and outcomes aligned.
 
-### Objective
+---
 
-Demonstrate how metadata from multiple scientific image datasets (e.g., microscopy images) stored in 4TU.ResearchData can be:
+# Use Case 1: Enrich IIIF Manifests of Scientific Image Datasets with Repository Metadata and Structured Annotations
 
-1. Programmatically harvested via the REST API
-2. Aggregated across datasets
-3. Embedded or referenced in IIIF Presentation API manifests
-4. Used for cross-dataset comparison and reuse in IIIF-compatible viewers
+## Objective
 
-This use case illustrates IIIF not merely as a visualization layer, but as an interoperability layer connecting distributed research datasets.
+Demonstrate how IIIF Presentation API manifests generated for scientific image datasets in 4TU.ResearchData can be **systematically enriched** with:
+
+1. Additional structured metadata retrieved via the 4TU REST API
+2. Domain-relevant descriptive fields aligned with the 4TU metadata schema
+3. Structured annotations derived from external sources (e.g., CSV)
+
+This use case positions IIIF not only as a visualization layer, but as a **carrier of enriched, FAIR-aligned metadata and annotations**, improving the interpretability and reusability of individual datasets.
+
+---
+
+## Conceptual Framing
+
+This is a **manifest enrichment workflow**, not a cross-dataset aggregation pipeline.
+
+* **Scope:** Per dataset
+* **Input:** Existing IIIF manifest + repository metadata + optional annotation files
+* **Output:** Enriched IIIF manifest
+
+Key idea:
+
+- Each dataset’s IIIF manifest becomes a **self-contained, semantically richer research object**.
+
+- The value is not in adding missing metadata, but in enabling multiple, reproducible, and user-defined semantic projections of the same dataset via IIIF manifests.
 
 ## Conceptual Architecture
 
 **Source system:** 4TU.ResearchData API
-**Intermediate layer:** Custom Bash processing / aggregation
-**Output layer:** IIIF Presentation 3.0 manifest
+**Processing layer:** Metadata extraction + transformation scripts (Bash/Python)
+**Output layer:** Enriched IIIF Presentation 3.0 manifest
 
-Workflow logic:
+Workflow:
 
-4TU API → Dataset UUIDs → Individual IIIF Manifests
-          ↓
-     Metadata aggregation
-          ↓
-     Annotation enrichment (CSV → IIIF)
-          ↓
-     Aggregated IIIF Manifest
-
----
-
-## Step 1 — Retrieve deposited datasets , e.g. from a collection (or author) 
-
-Datasets in 4TU.ResearchData are grouped under:
-
-* A **Collection UUID**
-* An **Author (profile) UUID**
-
-To retrieve all datasets in a collection:
-
-```bash
-curl "https://data.4tu.nl/v2/collections/de8ea9d4-f986-41fc-9412-6765985a0c9c/articles" | jq
+```
+4TU API → Dataset UUID  
+        ↓  
+   Retrieve dataset metadata  
+        ↓  
+   Retrieve IIIF manifest  
+        ↓  
+   Metadata enrichment (4TU → IIIF)  
+        ↓  
+   Annotation injection (CSV → IIIF)  
+        ↓  
+   Enriched IIIF manifest
 ```
 
-This returns a JSON array containing:
+
+
+## Step 1 — Retrieve deposited datasets (e.g., from a collection)
+
+Datasets can be retrieved via a collection or author endpoint:
+
+```bash
+curl "https://data.4tu.nl/v2/collections/<collection-uuid>/articles" | jq
+```
+
+This returns:
 
 * Dataset UUID
 * Title
 * DOI
-* Author metadata
-* Publication metadata
+* Author and publication metadata
 
-Each dataset has a unique identifier (`id` or `uuid`) which can be used to retrieve detailed metadata and associated files.
 
 
 ## Step 2 — Extract dataset UUIDs
-
-From the JSON response, extract the dataset identifiers:
-
-Example (conceptually):
 
 ```bash
 curl "https://data.4tu.nl/v2/collections/<collection-uuid>/articles" \
   | jq '.[].id'
 ```
 
-You now have a list of dataset UUIDs.
+These identifiers are used to drive downstream processing.
+
 
 
 ## Step 3 — Retrieve dataset-level metadata
-
-For each dataset UUID:
 
 ```bash
 curl "https://data.4tu.nl/v2/articles/<dataset-uuid>" | jq
 ```
 
-This returns:
+This provides:
 
-* Full metadata record
-* File listing
-* Author information
-* Keywords
-* Descriptions
-* Publication dates
+* Descriptive metadata (title, description, keywords)
+* Authors and affiliations
+* Publication details
+* Custom metadata fields (e.g., geolocation, time coverage)
+* File listings
 
 
-## Step 4 — Retrieve the IIIF Manifest for each dataset
 
-If IIIF is enabled for the dataset, the manifest can be retrieved via:
+## Step 4 — Retrieve the IIIF Manifest
 
 ```bash
-curl -X GET "https://data.4tu.nl/iiif/v3/<dataset-uuid>/1/manifest" | jq  > manifest_<dataset-uuid>.json
+curl -X GET "https://data.4tu.nl/iiif/v3/<dataset-uuid>/1/manifest" \
+  | jq > manifest_<dataset-uuid>.json
 ```
 
-This manifest typically contains:
+The base manifest typically includes:
 
-* Canvas entries for each image
+* Canvases (images)
 * Technical image metadata
-* Dataset-level descriptive metadata
+* Basic descriptive metadata
 
 
-## Step 5 — Aggregate metadata across datasets
 
-At this stage, you can extract selected metadata fields taken from `/v2/articles/<dataset-uuid>` endpoint such as:
+## Step 5 — Enrich the IIIF Manifest with Repository Metadata
+
+Selected metadata fields from the 4TU API are mapped and injected into the manifest.
+
+Typical fields include:
 
 * Title
 * Authors
 * Keywords
 * Categories
 * Related publications (DOI, title)
-* Time coverage
-* Geolocation (if available in custom fields)
-* Derived from (if available)
+* Temporal coverage
+* Geospatial metadata
+* Provenance fields (e.g., “derived from”)
 
-Then the agregated metadata can be injected into the manifest of each dataset :
+Example enrichment step:
 
 ```bash
-
-./inject_metadata.sh <dataset_uuid> manifest_<dataset_uuid>.json manifest_enriched_<dataset_uuid>.json
-
+./inject_metadata.sh <dataset_uuid> \
+  manifest_<dataset_uuid>.json \
+  manifest_enriched_<dataset_uuid>.json
 ```
-Example of an enriched manifest: https://leilaicruz.github.io/iiif_conference_2026/iiif/manifest_1_enriched2.json
 
-## Step 6 - Injecting structured annotations from CSV
+### Result
 
-In addition to metadata aggregation, annotations can be programmatically added to a IIIF manifest using a structured CSV file. The CSV file must follow this structure: ```canvas_label,text,xywh,motivation,lang```
-Where:
+The enriched manifest:
 
-| Field          | Description                                                         |
-| -------------- | ------------------------------------------------------------------- |
-| `canvas_label` | Label of the canvas to which the annotation applies                 |
-| `text`         | Annotation body text                                                |
-| `xywh`         | Region selector (pixel coordinates) formatted as `x,y,width,height` |
-| `motivation`   | IIIF motivation (e.g., `commenting`, `describing`, `tagging`)       |
-| `lang`         | Language code (e.g., `en`, `nl`)                                    |
+* Aligns IIIF metadata with repository metadata
+* Improves semantic completeness
+* Enhances machine readability and FAIR exposure
 
-Example:
+
+
+## Step 6 — Inject Structured Annotations from CSV
+
+Annotations can be programmatically added using a structured CSV file.
+
+### CSV format
 
 ```csv
 canvas_label,text,xywh,motivation,lang
 Image 1,Yeast nucleus marker detected,100,150,200,200,describing,en
 ```
-- Inject Annotations into a Manifest
 
-Use the provided script:
+| Field          | Description                                 |
+| -------------- | ------------------------------------------- |
+| `canvas_label` | Target canvas                               |
+| `text`         | Annotation content                          |
+| `xywh`         | Region selector (x,y,width,height)          |
+| `motivation`   | IIIF motivation (e.g., describing, tagging) |
+| `lang`         | Language code                               |
+
+### Injection step
 
 ```bash
-
-./annotations/inject_inline_annotations.py manifest_<dataset_uuid>.json annotations_<dataset_uuid>.csv manifest_enriched_<dataset_uuid>.json
-
+./annotations/inject_inline_annotations.py \
+  manifest_<dataset_uuid>.json \
+  annotations_<dataset_uuid>.csv \
+  manifest_enriched_<dataset_uuid>.json
 ```
 
-## Step 7 — Publish an aggregated IIIF Manifest
+### Result
 
-The aggregated manifest acts as:
+* Region-specific annotations embedded in the manifest
+* Supports interpretation, reuse, and domain-specific insights
 
-* A research object
-* A curated comparison layer
-* A reusable interoperability artifact
+
+
+## Step 7 — Publish the Enriched IIIF Manifest
+
+The final output is a **standalone enriched IIIF manifest** that:
+
+* Can be loaded in any IIIF-compatible viewer
+* Encapsulates both image data and rich metadata
+* Includes structured annotations
+
+
 
 ## Relevance
 
-By programmatically harvesting metadata and embedding it into IIIF manifests, we:
+This enrichment workflow enables:
 
-* Enable structured comparison
-* Preserve provenance
-* Support FAIR reuse
-* Turn IIIF into a research infrastructure component
+### 1. Improved FAIR Exposure
+
+* Metadata becomes explicitly structured and embedded
+* Enhances interoperability and machine-actionability
+
+### 2. Enhanced Data Reuse
+
+* Users can interpret datasets without consulting external metadata systems
+* Context travels with the manifest
+
+### 3. Semantic Alignment
+
+* Bridges repository metadata (4TU schema) and IIIF Presentation model
+* Reduces metadata fragmentation
+
+### 4. Annotation-Driven Interpretation
+
+* Supports domain-specific insights (e.g., microscopy features)
+* Enables reproducibility of observations
+
+
+
+This use case demonstrates how IIIF can function as a **metadata integration layer at the dataset level**, strengthening the FAIRness and usability of published scientific images. The the manifest could include all this metadata from the start, but the added value of this approach lies in decoupling, flexibility, and user-driven reinterpretation after deposition.
+
 
 
 ## Use case 2 : (Reinterpretation and reproducibility) Image analysis after deposition (no local copies): fetch, preview, and analyze images on-the-fly. 

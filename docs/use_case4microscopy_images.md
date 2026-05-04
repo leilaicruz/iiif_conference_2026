@@ -36,3 +36,4 @@ canvas_label,text,xywh,motivation,lang
 
  ```
 
+- Update the enriched manifest to a IIIF viewer , either locally or host it online. (https://manifest-editor.digirati.services/)

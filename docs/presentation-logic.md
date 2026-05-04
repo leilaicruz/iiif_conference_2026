@@ -59,7 +59,6 @@ Frame the problem clearly:
 ### But research data repositories face:
 
 * Fragmented image formats
-* Bespoke lab tooling
 * Weak cross-dataset interoperability
 * Metadata disconnected from visual access
 
@@ -80,7 +79,7 @@ At 4TU.ResearchData:
 * IIIF Image API deployed
 * IIIF Presentation API deployed
 * Python-based backend
-* Integrated with repository metadata (/v2/articles endpoint)
+
 
 Then state the conceptual shift:
 
