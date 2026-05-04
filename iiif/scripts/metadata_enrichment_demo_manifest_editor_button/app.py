@@ -145,11 +145,11 @@ def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=64):
 
 st.set_page_config(
     page_title="IIIF features for 4TU.ResearchData: Metadata enrichment and on-the-fly image analysis",
-    page_icon="assets/Logo.png",
+    page_icon="iiif/scripts/metadata_enrichment_demo_manifest_editor_button/assets/Logo.png",
     layout="wide"
 )
 
-st.image("assets/Logo.png", width=120)
+st.image("iiif/scripts/metadata_enrichment_demo_manifest_editor_button/assets/Logo.png", width=120)
 
 st.caption("Fetch or upload a IIIF manifest, select 4TU metadata fields, enrich the manifest, run lightweight image analysis, and export the result.")
 
