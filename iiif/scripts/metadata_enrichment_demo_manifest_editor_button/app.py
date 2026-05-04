@@ -71,7 +71,7 @@ def extract_thumbnail_urls(manifest, max_items=12):
             service_id = (
                 item["items"][0]["items"][0]["body"]["service"][0]["id"]
             )
-            thumb_url = f"{service_id}/full/!250,250/0/default.jpg"
+            thumb_url = f"{service_id}/full/!128,128/0/default.jpg"
             urls.append((label, thumb_url))
             continue
         except Exception:
@@ -125,7 +125,7 @@ with st.sidebar:
 manifest: dict[str, Any] | None = None
 dataset: dict[str, Any] | None = None
 
-st.subheader("1. Load manifest and dataset metadata")
+st.subheader("Load manifest and dataset metadata")
 
 if source_mode == "Fetch from dataset UUID":
     if dataset_uuid:
