@@ -60,29 +60,42 @@ def show_manifest_summary(manifest: dict[str, Any]) -> None:
 def read_uploaded_manifest(uploaded_file) -> dict[str, Any]:
     return json.loads(uploaded_file.getvalue().decode("utf-8"))
 
-def extract_thumbnail_urls(manifest, max_items=12):
+def extract_thumbnail_urls(manifest, max_items=12, size=128):
+    if not isinstance(manifest, dict):
+        return []
+
     urls = []
 
     for item in manifest.get("items", [])[:max_items]:
-        label = item.get("label", {}).get("en", ["Untitled canvas"])[0]
+        label_obj = item.get("label", {})
+        label = (
+            label_obj.get("en", ["Untitled canvas"])[0]
+            if isinstance(label_obj, dict)
+            else "Untitled canvas"
+        )
 
-        # Prefer IIIF Image API service
         try:
-            service_id = (
-                item["items"][0]["items"][0]["body"]["service"][0]["id"]
-            )
-            thumb_url = f"{service_id}/full/!128,128/0/default.jpg"
-            urls.append((label, thumb_url))
+            body = item["items"][0]["items"][0]["body"]
+
+            service = body.get("service", [])
+            if isinstance(service, dict):
+                service_id = service.get("id") or service.get("@id")
+            elif isinstance(service, list) and service:
+                service_id = service[0].get("id") or service[0].get("@id")
+            else:
+                service_id = None
+
+            if service_id:
+                thumb_url = f"{service_id}/full/!{size},{size}/0/default.jpg"
+                urls.append((label, thumb_url))
+                continue
+
+            body_id = body.get("id")
+            if body_id:
+                urls.append((label, body_id))
+
+        except Exception:
             continue
-        except Exception:
-            pass
-
-        # Fallback to body id
-        try:
-            body_id = item["items"][0]["items"][0]["body"]["id"]
-            urls.append((label, body_id))
-        except Exception:
-            pass
 
     return urls
 
@@ -173,18 +186,21 @@ if dataset:
         if "geolocation" in selected_fields:
             st.caption("Geolocation is added as IIIF navPlace, not as a regular metadata row.")
 
-st.subheader("Image thumbnails from the manifest")
+if isinstance(manifest, dict):
+    st.header("Image thumbnails from the manifest")
 
-thumbnail_urls = extract_thumbnail_urls(manifest)
+    thumbnail_urls = extract_thumbnail_urls(manifest, size=128)
 
-if not thumbnail_urls:
-    st.warning("No image URLs could be extracted from this manifest.")
+    if not thumbnail_urls:
+        st.warning("No image URLs could be extracted from this manifest.")
+    else:
+        cols = st.columns(4)
+
+        for index, (label, url) in enumerate(thumbnail_urls):
+            with cols[index % 4]:
+                st.image(url, caption=label, use_container_width=True)
 else:
-    cols = st.columns(3)
-
-    for index, (label, url) in enumerate(thumbnail_urls):
-        with cols[index % 3]:
-            st.image(url, caption=label, use_container_width=True)
+    st.info("Load or upload a manifest to preview image thumbnails.")
 
 st.subheader("Analyze images in Python")
 
