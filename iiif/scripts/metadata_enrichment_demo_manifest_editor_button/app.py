@@ -6,6 +6,10 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
+from urllib.parse import urlparse
+import os
+
+
 from metadata_enrichment.enrich_manifest import (
     DEFAULT_FIELDS,
     FIELD_LABELS,
@@ -60,6 +64,14 @@ def show_manifest_summary(manifest: dict[str, Any]) -> None:
 def read_uploaded_manifest(uploaded_file) -> dict[str, Any]:
     return json.loads(uploaded_file.getvalue().decode("utf-8"))
 
+def extract_filename_from_url(url):
+    try:
+        path = urlparse(url).path
+        filename = os.path.basename(path)
+        return filename or "Unnamed image"
+    except Exception:
+        return "Unnamed image"
+
 def extract_thumbnail_urls(manifest, max_items=12, size=128):
     if not isinstance(manifest, dict):
         return []
@@ -67,16 +79,10 @@ def extract_thumbnail_urls(manifest, max_items=12, size=128):
     urls = []
 
     for item in manifest.get("items", [])[:max_items]:
-        label_obj = item.get("label", {})
-        label = (
-            label_obj.get("en", ["Untitled canvas"])[0]
-            if isinstance(label_obj, dict)
-            else "Untitled canvas"
-        )
-
         try:
             body = item["items"][0]["items"][0]["body"]
 
+            # Try to get service (IIIF)
             service = body.get("service", [])
             if isinstance(service, dict):
                 service_id = service.get("id") or service.get("@id")
@@ -85,14 +91,18 @@ def extract_thumbnail_urls(manifest, max_items=12, size=128):
             else:
                 service_id = None
 
+            body_id = body.get("id")
+
+            # Extract filename from body_id
+            filename = extract_filename_from_url(body_id) if body_id else "Unnamed image"
+
             if service_id:
                 thumb_url = f"{service_id}/full/!{size},{size}/0/default.jpg"
-                urls.append((label, thumb_url))
+                urls.append((filename, thumb_url))
                 continue
 
-            body_id = body.get("id")
             if body_id:
-                urls.append((label, body_id))
+                urls.append((filename, body_id))
 
         except Exception:
             continue
