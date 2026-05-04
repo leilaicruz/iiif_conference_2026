@@ -115,7 +115,7 @@ def extract_filename_from_url(url):
     except Exception:
         return "Unnamed image"
 
-def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=128):
+def extract_thumbnail_urls(manifest, dataset_uuid=None, max_items=12, size=64):
     if not isinstance(manifest, dict):
         return []
 
@@ -233,7 +233,7 @@ if dataset:
 if isinstance(manifest, dict):
     st.header("Image thumbnails from the manifest")
 
-    thumbnail_urls = extract_thumbnail_urls(manifest, dataset_uuid=dataset_uuid, size=128)
+    thumbnail_urls = extract_thumbnail_urls(manifest, dataset_uuid=dataset_uuid, size=64)
 
     if not thumbnail_urls:
         st.warning("No image URLs could be extracted from this manifest.")
