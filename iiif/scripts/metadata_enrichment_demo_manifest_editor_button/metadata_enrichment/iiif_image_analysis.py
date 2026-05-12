@@ -72,7 +72,7 @@ def build_iiif_image_url(
     return f"{service_id.rstrip('/')}/{region}/{size}/{rotation}/{quality}.{fmt}"
 
 
-def fetch_pil_image(url: str, timeout: int = 60) -> Image.Image:
+def fetch_pil_image(url: str, timeout: int = 240) -> Image.Image:
     """Fetch an image URL into memory as a PIL Image."""
     response = requests.get(url, timeout=timeout)
     response.raise_for_status()

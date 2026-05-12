@@ -8,6 +8,10 @@ Workflow:
 ```
 curl "https://data.4tu.nl/v2/collections/de8ea9d4-f986-41fc-9412-6765985a0c9c/articles" | jq
 
+curl "https://data.4tu.nl/v2/articles/bcf01712-4f8d-4f12-bfc6-84fed4ddc086" | jq # microscopy images 
+
+curl "https://data.4tu.nl/v2/articles/bc373b4b-29f1-4108-b166-85420628ff97 | jq # microscopy images 
+
 ```
 - Then read the uuid of each dataset and get the manifest with the api, for example:
 ``` 

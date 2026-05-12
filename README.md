@@ -15,10 +15,6 @@ IIIF in this context is:
 Since deposit happens after research completion, IIIF: cannot influence experimental design, cannot support iterative image acquisition decisions, cannot integrate with lab instrumentation workflows. Thus , **our use cases are not focused on real-time microscopy analysis, computational image segmentation pipelines, or AI model training during experimentation**. Instead, we focus on post-deposition use cases that leverage IIIF for enhanced access, comparison, and reuse of published scientific images.
 
 
-Here is a clean, internally consistent rewrite of your use case under the **enrichment framing**, with terminology, architecture, and outcomes aligned.
-
----
-
 # Use Case 1: Enrich IIIF Manifests of Scientific Image Datasets with Repository Metadata and Structured Annotations
 
 ## Objective
